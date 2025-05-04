@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Banque Populaire - Avertissement Crédit</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/html-docx-js/dist/html-docx.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+    }
+
+    header {
+      background: #1a1a1a;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    header img {
+      position: absolute;
+      left: 20px;
+      top: 10px;
+      height: 50px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #f7941e;
+    }
+
+    form {
+      max-width: 700px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    label {
+      font-weight: 600;
+      margin-top: 12px;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+
+    button {
+      background-color: #f7941e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #output {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      border: 4px solid #1a1a1a;
+      border-left: 10px solid #f7941e;
+      border-radius: 12px;
+      padding: 30px;
+      position: relative;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    #output::before {
+      content: "";
+      position: absolute;
+      background: url('https://upload.wikimedia.org/wikipedia/fr/f/f6/Logo_Banque_Populaire_Maroc.svg') no-repeat;
+      background-size: 100px;
+      opacity: 0.08;
+      top: 20px;
+      right: 20px;
+      bottom: 20px;
+      left: 20px;
+      z-index: 0;
+    }
+
+    #message {
+      position: relative;
+      z-index: 1;
+      font-size: 16px;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    .btn-group {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .btn-group button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://upload.wikimedia.org/wikipedia/fr/f/f6/Logo_Banque_Populaire_Maroc.svg" alt="Logo">
+  <h1>Banque Populaire du Maroc</h1>
+</header>
+
+<form id="creditForm">
+  <label>Nom et prénom du client</label>
+  <input type="text" id="client" required />
+
+  <label>Numéro de compte</label>
+  <input type="text" id="compte" required />
+
+  <label>Nature de crédit</label>
+  <input type="text" id="nature" required />
+
+  <label>Banque / Guichet</label>
+  <input type="text" id="banque" required />
+
+  <label>Numéro de contrat</label>
+  <input type="text" id="contrat" required />
+
+  <label>Montant de crédit (MAD)</label>
+  <input type="number" id="montant" required />
+
+  <label>Date du contrat de crédit</label>
+  <input type="date" id="dateContrat" required />
+
+  <label>Encours de capital (MAD)</label>
+  <input type="number" id="encours" required />
+
+  <label>Nombre d’échéances impayées</label>
+  <input type="number" id="impayes" required />
+
+  <label>Montant des impayés (MAD)</label>
+  <input type="number" id="montantImpayes" required />
+
+  <label>Montant du solde de compte (MAD)</label>
+  <input type="number" id="solde" required />
+
+  <button type="submit">Générer l’avertissement</button>
+</form>
+
+<div id="output" style="display: none;">
+  <div id="message"></div>
+  <div class="btn-group">
+    <button onclick="downloadPDF()">Télécharger PDF</button>
+    <button onclick="downloadWord()">Télécharger Word</button>
+    <button onclick="window.print()">Imprimer</button>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('creditForm');
+  const output = document.getElementById('output');
+  const messageDiv = document.getElementById('message');
+  let messageContent = '';
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const data = {
+      client: document.getElementById('client').value,
+      compte: document.getElementById('compte').value,
+      nature: document.getElementById('nature').value,
+      banque: document.getElementById('banque').value,
+      contrat: document.getElementById('contrat').value,
+      montant: document.getElementById('montant').value,
+      dateContrat: document.getElementById('dateContrat').value,
+      encours: document.getElementById('encours').value,
+      impayes: document.getElementById('impayes').value,
+      montantImpayes: document.getElementById('montantImpayes').value,
+      solde: document.getElementById('solde').value
+    };
+
+    messageContent = `
+<b>Objet :</b> Avertissement pour non-paiement d’échéances de crédit<br><br>
+
+<b>Client :</b> ${data.client}<br>
+<b>Numéro de compte :</b> ${data.compte}<br><br>
+
+<b>Crédit :</b> ${data.nature} (n° ${data.contrat})<br>
+<b>Date du contrat :</b> ${data.dateContrat}<br>
+<b>Montant initial :</b> ${data.montant} MAD<br><br>
+
+Madame, Monsieur,<br><br>
+
+Nous avons constaté que votre crédit présente les irrégularités suivantes :<br>
+- Nombre d’échéances impayées : <b>${data.impayes}</b><br>
+- Montant des impayés : <b>${data.montantImpayes} MAD</b><br>
+- Encours du capital : <b>${data.encours} MAD</b><br>
+- Solde de votre compte : <b>${data.solde} MAD</b><br><br>
+
+Nous vous invitons à régulariser votre situation dans les plus brefs délais afin d’éviter toute procédure contentieuse.<br><br>
+
+Nous restons à votre disposition pour toute assistance complémentaire.<br><br>
+
+Cordialement,<br>
+<b>Banque Populaire du Maroc</b><br>
+Agence : ${data.banque}
+`;
+
+    messageDiv.innerHTML = messageContent;
+    output.style.display = 'block';
+  });
+
+  function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = messageContent.replace(/<br>/g, "
+").replace(/<[^>]*>?/gm, '');
+    doc.setFont("helvetica", "normal");
+    doc.text(tempDiv.innerText, 10, 10);
+    doc.save("Avertissement_Credit.pdf");
+  }
+
+  function downloadWord() {
+    const content = `<html><head><meta charset="utf-8"></head><body><div>${messageContent}</div></body></html>`;
+    const converted = window.htmlDocx.asBlob(content);
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(converted);
+    link.download = 'Avertissement_Credit.docx';
+    link.click();
+  }
+</script>
+
+</body>
+</html>
